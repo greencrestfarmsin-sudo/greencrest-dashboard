@@ -2,64 +2,111 @@
 <html>
 
 <head>
-    <title>Greencrest Live Dashboard</title>
+    <title>Greencrest Farms Monitor</title>
 
+    <!-- Mobile responsive -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
+    <!-- Styling -->
     <style>
         body {
             font-family: Arial;
             text-align: center;
             background: #111;
             color: white;
+            margin: 0;
+            padding: 20px;
         }
 
         h1 {
             color: #00ffcc;
         }
 
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         .card {
+            background: #222;
             margin: 10px;
             padding: 20px;
-            background: #222;
-            border-radius: 10px;
-            display: inline-block;
+            border-radius: 12px;
             width: 200px;
+            font-size: 18px;
+        }
+
+        .camera-box {
+            margin-top: 30px;
+        }
+
+        img {
+            width: 90%;
+            max-width: 800px;
+            border-radius: 12px;
+            border: 2px solid #00ffcc;
+        }
+
+        #status {
+            margin-bottom: 20px;
+            font-size: 18px;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>🐔 Greencrest Farms Dashboard</h1>
-    <h3 id="status">🟡 Waiting for data...</h3>
+    <h1>🐔 Greencrest Farms Monitor</h1>
+    <h3 id="status">🟡 Connecting...</h3>
 
-    <div class="card">🌡️ Temp: <span id="temp">--</span> °C</div>
-    <div class="card">💧 Hum: <span id="hum">--</span> %</div>
-    <div class="card">🌫️ Gas: <span id="gas">--</span></div>
-    <div class="card">🕺 Motion: <span id="motion">--</span></div>
+    <div class="container">
+        <div class="card">🌡️ Temp: <span id="temp">--</span> °C</div>
+        <div class="card">💧 Hum: <span id="hum">--</span> %</div>
+        <div class="card">🌫️ Gas: <span id="gas">--</span></div>
+        <div class="card">🕺 Motion: <span id="motion">--</span></div>
+    </div>
+
+    <div class="camera-box">
+        <h2>🎥 Live Camera</h2>
+
+        <img id="camera" src="https://hens.greencrestfarms.com/video"
+            onerror="this.src='https://via.placeholder.com/800x400?text=Camera+Offline';">
+    </div>
 
     <script>
+        // 🔥 Firebase config
         const firebaseConfig = {
             databaseURL: "https://greencrest-dashboard-default-rtdb.firebaseio.com/"
         };
 
         firebase.initializeApp(firebaseConfig);
 
-        // ✅ IMPORTANT — point to "data"
         const db = firebase.database().ref("data");
 
         db.on("value", (snapshot) => {
             const data = snapshot.val();
 
-            console.log("LIVE:", data); // debug
+            if (!data) return;
+
+            document.getElementById("status").innerText = "🟢 Live";
 
             document.getElementById("temp").innerText = data.temperature;
             document.getElementById("hum").innerText = data.humidity;
             document.getElementById("gas").innerText = data.gas;
             document.getElementById("motion").innerText =
                 data.motion == 1 ? "Detected" : "No";
+
+            // 🔴 Alert UI
+            if (data.gas > 1500) {
+                document.body.style.background = "#400000";
+            } else {
+                document.body.style.background = "#111";
+            }
         });
     </script>
 
