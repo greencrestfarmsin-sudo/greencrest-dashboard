@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Greencrest Live Dashboard</title>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #111;
+            color: white;
+        }
+
+        h1 {
+            color: #00ffcc;
+        }
+
+        .card {
+            margin: 10px;
+            padding: 20px;
+            background: #222;
+            border-radius: 10px;
+            display: inline-block;
+            width: 200px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🐔 Greencrest Farms Dashboard</h1>
+    <h3 id="status">🟡 Waiting for data...</h3>
+
+    <div class="card">🌡️ Temp: <span id="temp">--</span> °C</div>
+    <div class="card">💧 Hum: <span id="hum">--</span> %</div>
+    <div class="card">🌫️ Gas: <span id="gas">--</span></div>
+    <div class="card">🕺 Motion: <span id="motion">--</span></div>
+
+    <script>
+        const firebaseConfig = {
+            databaseURL: "https://greencrest-dashboard-default-rtdb.firebaseio.com/"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        // ✅ IMPORTANT — point to "data"
+        const db = firebase.database().ref("data");
+
+        db.on("value", (snapshot) => {
+            const data = snapshot.val();
+
+            console.log("LIVE:", data); // debug
+
+            document.getElementById("temp").innerText = data.temperature;
+            document.getElementById("hum").innerText = data.humidity;
+            document.getElementById("gas").innerText = data.gas;
+            document.getElementById("motion").innerText =
+                data.motion == 1 ? "Detected" : "No";
+        });
+    </script>
+
+</body>
+
+</html>
