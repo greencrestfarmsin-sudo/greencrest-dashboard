@@ -4,14 +4,12 @@
 <head>
     <title>Greencrest Farms Monitor</title>
 
-    <!-- Mobile responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-    <!-- Styling -->
     <style>
         body {
             font-family: Arial;
@@ -41,8 +39,18 @@
             font-size: 18px;
         }
 
-        .camera-box {
-            margin-top: 30px;
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background: #00ffcc;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background: #00ccaa;
         }
 
         img {
@@ -50,11 +58,12 @@
             max-width: 800px;
             border-radius: 12px;
             border: 2px solid #00ffcc;
+            margin-top: 20px;
         }
 
-        #status {
-            margin-bottom: 20px;
-            font-size: 18px;
+        #cam-status {
+            margin-top: 10px;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -69,14 +78,14 @@
         <div class="card">💧 Hum: <span id="hum">--</span> %</div>
         <div class="card">🌫️ Gas: <span id="gas">--</span></div>
         <div class="card">🕺 Motion: <span id="motion">--</span></div>
+        <div class="card">🐔 Hens: <span id="count">--</span></div>
     </div>
 
-    <div class="camera-box">
-        <h2>🎥 Live Camera</h2>
+    <!-- CAMERA CONTROL -->
+    <button onclick="toggleCamera()">🎥 Toggle Camera</button>
 
-        <img id="camera" src="https://hens.greencrestfarms.com/video"
-            onerror="this.src='https://via.placeholder.com/800x400?text=Camera+Offline';">
-    </div>
+    <div id="cam-container"></div>
+    <p id="cam-status">🔴 Camera OFF</p>
 
     <script>
         // 🔥 Firebase config
@@ -85,12 +94,11 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-
         const db = firebase.database().ref("data");
 
+        // 🔥 Firebase data
         db.on("value", (snapshot) => {
             const data = snapshot.val();
-
             if (!data) return;
 
             document.getElementById("status").innerText = "🟢 Live";
@@ -101,13 +109,44 @@
             document.getElementById("motion").innerText =
                 data.motion == 1 ? "Detected" : "No";
 
-            // 🔴 Alert UI
+            // Alert background
             if (data.gas > 1500) {
                 document.body.style.background = "#400000";
             } else {
                 document.body.style.background = "#111";
             }
         });
+
+        // 🔥 Hen count from Jetson
+        setInterval(async () => {
+            try {
+                const res = await fetch("https://hens.greencrestfarms.com/stats");
+                const data = await res.json();
+
+                document.getElementById("count").innerText = data.hen_count;
+            } catch (err) {
+                document.getElementById("count").innerText = "--";
+            }
+        }, 1000);
+
+        // 🎥 Camera toggle
+        let camOn = false;
+
+        function toggleCamera() {
+            const box = document.getElementById("cam-container");
+            const status = document.getElementById("cam-status");
+
+            if (!camOn) {
+                box.innerHTML =
+                    '<img id="camera" src="https://hens.greencrestfarms.com/stream">';
+                status.innerText = "🟢 Camera Live";
+                camOn = true;
+            } else {
+                box.innerHTML = "";
+                status.innerText = "🔴 Camera OFF";
+                camOn = false;
+            }
+        }
     </script>
 
 </body>
